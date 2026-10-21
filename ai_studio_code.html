@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luna — Voice Assistant for Mahnoor Tabassam</title>
+  
+  <!-- Sophisticated Serif Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-cream: #FAF8F5;
+      --surface-warm: #F3EFEA;
+      --text-main: #1D1A17;
+      --text-muted: #7A746E;
+      --border-subtle: #E6E1D9;
+      --accent-rose: #E8B4B8;
+      --accent-blush: #F7E7E8;
+      --accent-dark: #2B2623;
+      --glow: rgba(232, 180, 184, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-cream);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -20%;
+      right: -10%;
+      width: 650px;
+      height: 650px;
+      background: radial-gradient(circle, var(--accent-blush) 0%, transparent 70%);
+      z-index: -1;
+      opacity: 0.85;
+      filter: blur(70px);
+    }
+
+    header {
+      padding: 2.5rem 3.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .brand-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .brand-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-left: 0.5rem;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #73C991;
+      transition: all 0.3s ease;
+    }
+
+    .status-dot.active {
+      background: var(--accent-rose);
+      box-shadow: 0 0 12px var(--accent-rose);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+      font-weight: 400;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.3rem;
+      color: var(--text-main);
+    }
+
+    .hero-subtext {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      line-height: 1.6;
+      max-width: 520px;
+      margin-bottom: 3rem;
+    }
+
+    /* Orb Interface */
+    .orb-container {
+      position: relative;
+      width: 165px;
+      height: 165px;
+      margin-bottom: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .orb-ring {
+      position: absolute;
+      inset: -12px;
+      border-radius: 50%;
+      border: 1px solid var(--border-subtle);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .orb {
+      width: 135px;
+      height: 135px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #FFFFFF 0%, var(--accent-blush) 45%, var(--accent-rose) 100%);
+      box-shadow: 0 20px 45px var(--glow);
+      transition: all 0.4s ease;
+      position: relative;
+    }
+
+    .orb-container.listening .orb {
+      transform: scale(1.08);
+      box-shadow: 0 25px 60px rgba(232, 180, 184, 0.7);
+    }
+
+    .orb-container.listening .orb-ring {
+      inset: -22px;
+      border-color: var(--accent-rose);
+      animation: pulse-ring 2s infinite ease-out;
+    }
+
+    .orb-container.speaking .orb {
+      animation: speak-pulse 1.3s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      100% { transform: scale(1.25); opacity: 0; }
+    }
+
+    @keyframes speak-pulse {
+      0% { transform: scale(1); filter: brightness(1); }
+      100% { transform: scale(1.06); filter: brightness(1.06); box-shadow: 0 25px 55px rgba(232, 180, 184, 0.8); }
+    }
+
+    /* Captions Area */
+    .caption-box {
+      min-height: 85px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.2rem;
+      width: 100%;
+    }
+
+    .caption-speaker {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-rose);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    .caption-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.55rem;
+      font-style: italic;
+      color: var(--text-main);
+      max-width: 650px;
+      line-height: 1.4;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Interactive Prompts */
+    .prompt-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      justify-content: center;
+      max-width: 720px;
+    }
+
+    .pill {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      cursor: pointer;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: all 0.25s ease;
+    }
+
+    .pill:hover {
+      border-color: var(--accent-rose);
+      background-color: var(--surface-warm);
+      transform: translateY(-1px);
+    }
+
+    footer {
+      padding: 2.2rem 3.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .voice-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      color: var(--text-main);
+    }
+
+    @media (max-width: 640px) {
+      header, footer {
+        padding: 1.5rem;
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+      }
+      .hero-title {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Editorial Header -->
+  <header>
+    <div class="brand-title">
+      Mahnoor Tabassam <span class="brand-sub">— Data Analyst</span>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusLabel">Luna is ready</span>
+    </div>
+  </header>
+
+  <!-- Main Assistant Interface -->
+  <main>
+    <div class="hero-eyebrow">Personal Representative & Voice Concierge</div>
+    <h1 class="hero-title">Meet Luna</h1>
+    
+    <!-- Requested updated sentence without "American" -->
+    <p class="hero-subtext">
+      Tap the pearl orb below to converse. Luna speaks with a bright, charming tone to guide you through Mahnoor's work, vision, and collaborations.
+    </p>
+
+    <!-- Orb -->
+    <div class="orb-container" id="orbBtn" title="Click to speak with Luna">
+      <div class="orb-ring"></div>
+      <div class="orb"></div>
+    </div>
+
+    <!-- Live Captions -->
+    <div class="caption-box">
+      <span class="caption-speaker" id="speakerLabel">Luna</span>
+      <p class="caption-text" id="captionText">
+        "Hi there! Tap on me to talk, or select any question below to learn about Mahnoor."
+      </p>
+    </div>
+
+    <!-- Quick Prompts rooted in Resume -->
+    <div class="prompt-pills">
+      <button class="pill" onclick="handlePrompt('Who is Mahnoor Tabassam?')">Who is Mahnoor?</button>
+      <button class="pill" onclick="handlePrompt('Tell me about Mahnoor’s experience at Ericsson')">Experience at Ericsson</button>
+      <button class="pill" onclick="handlePrompt('What technical skills and tools does she use?')">Technical Skills & BI</button>
+      <button class="pill" onclick="handlePrompt('What did she achieve at Reetro and Wise?')">QA at Reetro & Wise</button>
+      <button class="pill" onclick="handlePrompt('What is her education?')">Education</button>
+      <button class="pill" onclick="handlePrompt('How can I contact Mahnoor?')">Get in touch</button>
+    </div>
+  </main>
+
+  <!-- Minimal Footer -->
+  <footer>
+    <div class="voice-badge">
+      <span>Voice Profile:</span> Luna (US English / Girlish Cadence)
+    </div>
+    <div>Tallinn, Estonia • Estonian Business School</div>
+  </footer>
+
+  <script>
+    let isListening = false;
+    let selectedVoice = null;
+
+    const orbBtn = document.getElementById('orbBtn');
+    const statusDot = document.getElementById('statusDot');
+    const statusLabel = document.getElementById('statusLabel');
+    const captionText = document.getElementById('captionText');
+    const speakerLabel = document.getElementById('speakerLabel');
+
+    // 1. Initialize Vocal Persona
+    function initLunaVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoices = [
+        "Samantha",          // macOS / iOS clear US female
+        "Google US English", // Chrome natural US
+        "Microsoft Zira",    // Windows US female
+        "Victoria",
+        "en-US"
+      ];
+
+      for (let name of preferredVoices) {
+        selectedVoice = voices.find(v => v.name.includes(name) || (v.lang === 'en-US' && v.name.toLowerCase().includes('female')));
+        if (selectedVoice) break;
+      }
+
+      if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+      }
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = initLunaVoice;
+      initLunaVoice();
+    }
+
+    // 2. Luna's High-Pitch, Girlie, American Tone
+    function speakLuna(text) {
+      if (!('speechSynthesis' in window)) {
+        captionText.textContent = text;
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      if (selectedVoice) utterance.voice = selectedVoice;
+
+      // Higher pitch & lively pace for sweet, bright, girlie cadence
+      utterance.pitch = 1.25;
+      utterance.rate = 1.05;
+      utterance.volume = 1.0;
+
+      utterance.onstart = () => {
+        orbBtn.classList.remove('listening');
+        orbBtn.classList.add('speaking');
+        statusDot.classList.add('active');
+        statusLabel.textContent = "Luna is speaking";
+        speakerLabel.textContent = "Luna";
+        captionText.textContent = `“${text}”`;
+      };
+
+      utterance.onend = () => {
+        orbBtn.classList.remove('speaking');
+        statusDot.classList.remove('active');
+        statusLabel.textContent = "Luna is ready";
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // 3. Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        isListening = true;
+        orbBtn.classList.add('listening');
+        statusDot.classList.add('active');
+        statusLabel.textContent = "Listening to you...";
+        speakerLabel.textContent = "You";
+        captionText.textContent = "Listening closely...";
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        captionText.textContent = `“${transcript}”`;
+        processUserInput(transcript);
+      };
+
+      recognition.onerror = (e) => {
+        console.error("Speech recognition error:", e);
+        stopListening();
+        speakLuna("Oopsie, I didn't quite catch that! Would you mind saying that one more time for me?");
+      };
+
+      recognition.onend = () => {
+        stopListening();
+      };
+    }
+
+    function toggleListening() {
+      if (!SpeechRecognition) {
+        alert("Your browser doesn't support live microphone input. Please try Chrome or Edge, or click the question pills below!");
+        return;
+      }
+
+      if (isListening) {
+        recognition.stop();
+      } else {
+        window.speechSynthesis.cancel();
+        recognition.start();
+      }
+    }
+
+    function stopListening() {
+      isListening = false;
+      orbBtn.classList.remove('listening');
+      statusDot.classList.remove('active');
+      statusLabel.textContent = "Luna is ready";
+    }
+
+    orbBtn.addEventListener('click', toggleListening);
+
+    // 4. Mahnoor Tabassam's Resume Knowledge Base
+    function processUserInput(input) {
+      const q = input.toLowerCase();
+
+      // About Mahnoor
+      if (q.includes('who is') || q.includes('about') || q.includes('background') || q.includes('introduce')) {
+        speakLuna("Mahnoor Tabassam is a talented Data Analyst based in Tallinn, Estonia. She specializes in business intelligence, automated KPI dashboards, and end-to-end data integration. She’s super detail-oriented and loves turning complex data into clear, actionable stories!");
+      } 
+      // Ericsson Experience
+      else if (q.includes('ericsson') || q.includes('improvement lead') || q.includes('dashboard')) {
+        speakLuna("At Ericsson, Mahnoor worked as an Improvement Lead Trainee! She designed and developed a full Power BI KPI dashboard from scratch using star schema modeling, DAX measures, and Power Query. She integrated data across Snowflake, SharePoint, Excel, and Power Apps, completely eliminating manual data entry!");
+      } 
+      // Technical Skills & BI Stack
+      else if (q.includes('skill') || q.includes('tool') || q.includes('tech stack') || q.includes('power bi') || q.includes('sql') || q.includes('python')) {
+        speakLuna("Mahnoor has an impressive toolkit! For BI and visualization, she rocks Power BI, DAX, Power Query, and Power Apps. For databases, she works with SQL, Snowflake, and Excel, plus Python for programming, and Playwright for test automation!");
+      } 
+      // QA at Reetro & Wise
+      else if (q.includes('reetro') || q.includes('wise') || q.includes('testing') || q.includes('qa') || q.includes('wisewomencode')) {
+        speakLuna("Mahnoor was a QA Intern at Reetro, where she slashed critical production defects by twenty-five percent using Playwright for automated E2E and API testing! Plus, she participated in WiseWomenCode at Wise, shadowing platform engineers on Docker, clusters, Java, and AI!");
+      } 
+      // Education & Studies
+      else if (q.includes('education') || q.includes('degree') || q.includes('university') || q.includes('school') || q.includes('ebs')) {
+        speakLuna("She is pursuing her Bachelor of Arts in Impactful Entrepreneurship at the prestigious Estonian Business School in Tallinn, graduating in 2027!");
+      } 
+      // Contact & Hiring
+      else if (q.includes('contact') || q.includes('email') || q.includes('reach') || q.includes('hire') || q.includes('linkedin') || q.includes('phone')) {
+        speakLuna("You can reach out to Mahnoor at mahnoortabassam@proton.me, or give her a ring at +372 54291841. She's also on LinkedIn and would love to connect!");
+      } 
+      // Fun & Greetings
+      else if (q.includes('hello') || q.includes('hi') || q.includes('hey')) {
+        speakLuna("Hey there! It's so lovely to meet you. Ask me anything about Mahnoor's projects at Ericsson, her tech stack, or how to get in touch!");
+      } 
+      else {
+        speakLuna("Mahnoor is an accomplished Data Analyst with hands-on expertise in Power BI, SQL, Snowflake, and automated testing. Feel free to ask about her Ericsson dashboard or how she reduced defects at Reetro!");
+      }
+    }
+
+    function handlePrompt(promptText) {
+      processUserInput(promptText);
+    }
+  </script>
+</body>
+</html>
